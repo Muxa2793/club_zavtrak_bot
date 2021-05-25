@@ -1,15 +1,13 @@
 
-#from rating import (add_cafe, add_cafe_name, rate_taste, rate_supply, rate_service, rate_interior, 
-#                    rate_atmosphere, rate_details, add_point, add_comment, dont_know)
+from rating import (rate_cafe, add_cafe_name, rate_taste, rate_supply, rate_service, rate_interior,
+                    rate_atmosphere, rate_details, add_point, add_comment, rate_dont_know)
 
 from telegram.ext import MessageHandler, Filters, ConversationHandler
 from db import db, add_cafe_in_list
 
-'''
 RATE_CAFE = ConversationHandler(
-    entry_points=[MessageHandler(Filters.regex('^(Хочу оценить заведение)'), add_cafe)],
+    entry_points=[MessageHandler(Filters.regex('^(Хочу оценить заведение)'), rate_cafe)],
     states={
-        'add_cafe_name': [MessageHandler(Filters.text, add_cafe_name)],
         'rate_taste': [MessageHandler(Filters.text, rate_taste)],
         'rate_supply': [MessageHandler(Filters.text, rate_supply)],
         'rate_service': [MessageHandler(Filters.text, rate_service)],
@@ -21,9 +19,8 @@ RATE_CAFE = ConversationHandler(
     },
     fallbacks=[MessageHandler(Filters.text | Filters.regex('^(Хочу оценить заведение)') | Filters.photo |
                               Filters.video | Filters.location | Filters.document,
-                              dont_know)]
+                              rate_dont_know)]
     )
-'''
 
 
 def add_cafe(update, context):

@@ -1,30 +1,20 @@
-from telegram import ReplyKeyboardRemove
 from telegram.ext import ConversationHandler
-from utils import rate_keyboard
+from utils import rate_keyboard, main_keyboard
 
 
-def add_cafe(update, context):
+def rate_cafe(update, context):
+    update.message.text
+    print(update.message.text)
     text = update.message.text
-    if text == 'Заново':
-        context.bot.send_message(chat_id=update.effective_chat.id,
-                                 text='Напишите название заведения:',
-                                 reply_markup=rate_keyboard())
-        return 'add_cafe_name'
-    if 'Cafe_name' in text:
-        context.bot.delete_message(chat_id=update.effective_chat.id, message_id=update.message.message_id)
-        context.bot.send_message(chat_id=update.effective_chat.id,
-                                 text='После @club_zavtrak_bot напишите название заведения')
-        return ConversationHandler.END
-    else:
-        context.bot.delete_message(chat_id=update.effective_chat.id, message_id=update.message.message_id)
-        text = text.split()
-        context.user_data['cafe_name'] = text[3:]
-        cafe_name = context.user_data['cafe_name']
-        context.bot.send_message(chat_id=update.effective_chat.id,
-                                 parse_mode='HTML',
-                                 text=f'Оцените вкус еды в <b>"{cafe_name}"</b> от 0 до 1.5',
-                                 reply_markup=rate_keyboard())
-        return 'rate_taste'
+    context.bot.delete_message(chat_id=update.effective_chat.id, message_id=update.message.message_id)
+    text = text.split()
+    context.user_data['cafe_name'] = ' '.join(text[3:])
+    cafe_name = context.user_data['cafe_name']
+    context.bot.send_message(chat_id=update.effective_chat.id,
+                             parse_mode='HTML',
+                             text=f'Оцените вкус еды в <b>"{cafe_name}"</b> от 0 до 1.5',
+                             reply_markup=rate_keyboard())
+    return 'rate_taste'
 
 
 def add_cafe_name(update, context):
@@ -47,7 +37,7 @@ def rate_taste(update, context):
                                   parse_mode='HTML')
         return 'rate_supply'
     elif update.message.text == 'Заново':
-        return add_cafe(update, context)
+        return rate_cafe(update, context)
     elif update.message.text == 'Выйти':
         return exit_rating(update, context)
     else:
@@ -74,7 +64,7 @@ def rate_supply(update, context):
                                   parse_mode='HTML')
         return 'rate_service'
     elif update.message.text == 'Заново':
-        return add_cafe(update, context)
+        return rate_cafe(update, context)
     elif update.message.text == 'Выйти':
         return exit_rating(update, context)
     else:
@@ -101,7 +91,7 @@ def rate_service(update, context):
                                   parse_mode='HTML')
         return 'rate_interior'
     elif update.message.text == 'Заново':
-        return add_cafe(update, context)
+        return rate_cafe(update, context)
     elif update.message.text == 'Выйти':
         return exit_rating(update, context)
     else:
@@ -130,7 +120,7 @@ def rate_interior(update, context):
                                   parse_mode='HTML')
         return 'rate_atmosphere'
     elif update.message.text == 'Заново':
-        return add_cafe(update, context)
+        return rate_cafe(update, context)
     elif update.message.text == 'Выйти':
         return exit_rating(update, context)
     else:
@@ -157,7 +147,7 @@ def rate_atmosphere(update, context):
                                   parse_mode='HTML')
         return 'rate_details'
     elif update.message.text == 'Заново':
-        return add_cafe(update, context)
+        return rate_cafe(update, context)
     elif update.message.text == 'Выйти':
         return exit_rating(update, context)
     else:
@@ -184,7 +174,7 @@ def rate_details(update, context):
                                   parse_mode='HTML')
         return 'add_point'
     elif update.message.text == 'Заново':
-        return add_cafe(update, context)
+        return rate_cafe(update, context)
     elif update.message.text == 'Выйти':
         return exit_rating(update, context)
     else:
@@ -212,7 +202,7 @@ def add_point(update, context):
                                   parse_mode='HTML')
         return 'add_comment'
     elif update.message.text == 'Заново':
-        return add_cafe(update, context)
+        return rate_cafe(update, context)
     elif update.message.text == 'Выйти':
         return exit_rating(update, context)
     else:
@@ -267,17 +257,17 @@ def add_comment(update, context):
                               f'Дополнительный балл - <b>{point}</b>\n'
                               f'Комментарий: <b>{comment}</b>\n\n'
                               f'<b>Итого: {summ}</b>',
-                              parse_mode='HTML')
-    context.user_data.clear()
+                              parse_mode='HTML',
+                              reply_markup=main_keyboard())
     return ConversationHandler.END
 
 
 def exit_rating(update, context):
     update.message.reply_text('Оценка удалена. До свидания!',
-                              reply_markup=ReplyKeyboardRemove())
+                              reply_markup=main_keyboard())
     context.user_data.clear()
     return ConversationHandler.END
 
 
-def dont_know(update, context):
+def rate_dont_know(update, context):
     update.message.reply_text('Я вас не понимаю')

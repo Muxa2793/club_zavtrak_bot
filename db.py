@@ -42,3 +42,7 @@ def find_rate_cafe(db, chat_id):
         return False
     else:
         return db.cafe.find({'chat_id': chat_id, 'rate': True})
+
+
+def get_about_cafe(db, chat_id, cafe_name):
+    return db.cafe.find_one({'chat_id': chat_id, 'cafe_name': cafe_name.lower()})
