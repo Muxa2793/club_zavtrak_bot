@@ -19,7 +19,28 @@ def rate_end_keyboard():
 def show_rating_keyboard():
     keyboard = [
         [
-            InlineKeyboardButton('Подробнее', switch_inline_query_current_chat='Подробнее:'),
+            InlineKeyboardButton('Подробнее', switch_inline_query_current_chat='Подробнее: '),
+            InlineKeyboardButton('Удалить', switch_inline_query_current_chat='Удалить: ')
+        ]
+    ]
+    return InlineKeyboardMarkup(keyboard)
+
+
+def rating_keyboard():
+    keyboard = [
+        [
+            InlineKeyboardButton('Оценить', switch_inline_query_current_chat='Оценить: '),
+            InlineKeyboardButton('Удалить', switch_inline_query_current_chat='Удалить: ')
+        ]
+    ]
+    return InlineKeyboardMarkup(keyboard)
+
+
+def rate_again_keyboard(cafe_name):
+    keyboard = [
+        [
+            InlineKeyboardButton('Редактировать', switch_inline_query_current_chat=f'Редактировать: {cafe_name}',
+                                 resize_keyboard=True)
         ]
     ]
     return InlineKeyboardMarkup(keyboard)
