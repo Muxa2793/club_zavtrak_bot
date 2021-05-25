@@ -1,12 +1,10 @@
 import logging
-from db import db, find_cafe
-from telegram import InlineQueryResultArticle, InputTextMessageContent, ReplyKeyboardRemove
+import re
+from db import db, find_rate_cafe, find_unrate_cafe
+from telegram import InlineQueryResultArticle, InputTextMessageContent
 from telegram.ext import ConversationHandler
 from settings import HELP
-from utils import rate_keyboard
-
-CAFE_ICON = 'https://i.ibb.co/pv8RDPL/cafe.png'
-INFO_ICON = 'https://i.ibb.co/4NLgGyD/rating.png'
+from utils import main_keyboard, show_rating_keyboard
 
 
 def greet_user(update, context):
@@ -14,7 +12,8 @@ def greet_user(update, context):
 
     update.message.reply_text('Вас приветствует club_zavtrak_bot. Вы вызвали команду /start.\n'
                               'Бот создан для оценки ресторанных заведений по методике "скури" и '
-                              'ведения базы посещённых ресторанов.')
+                              'ведения базы посещённых ресторанов.',
+                              reply_markup=main_keyboard())
 
 
 def help_user(update, context):
@@ -23,6 +22,58 @@ def help_user(update, context):
     update.message.reply_text(HELP)
 
 
+def show_cafe(update, context):
+    text = update.message.text
+    context.bot.delete_message(chat_id=update.effective_chat.id, message_id=update.message.message_id)
+    if text == 'Посещённые заведения':
+        cafe_find = find_rate_cafe(db, update.effective_chat.id)
+        if cafe_find is False:
+            context.bot.send_message(chat_id=update.effective_chat.id, text='Cписок посещённых заведений пуст.')
+        else:
+            cafe_list = []
+            context.user_data['cafe_name'] = []
+            x = context.user_data['cafe_name']
+            for cafe in cafe_find:
+                cafe_list.append(cafe['cafe_name'] + ' - ' + cafe['about_cafe']['summ'])
+                x.append(cafe['cafe_name'])
+            cafe_list_string = '\n'.join(cafe_list).lower().capitalize()
+            context.bot.send_message(chat_id=update.effective_chat.id,
+                                     parse_mode='HTML',
+                                     text=f'Список посещённых заведений:\n'
+                                          f'{cafe_list_string}',
+                                     reply_markup=show_rating_keyboard())
+    elif text == 'Не посещённые заведения':
+        cafe_find = find_unrate_cafe(db, update.effective_chat.id)
+        if cafe_find is False:
+            context.bot.send_message(chat_id=update.effective_chat.id, text='Вы ещё не оценили ни одного места')
+        else:
+            cafe_list = []
+            for cafe in cafe_find:
+                cafe_list.append('- ' + cafe['cafe_name'])
+            cafe_list_string = '\n'.join(cafe_list).lower().capitalize()
+            context.bot.send_message(chat_id=update.effective_chat.id,
+                                     parse_mode='HTML',
+                                     text=f'Список не оцененных заведений:\n'
+                                          f'{cafe_list_string}')
+
+
+def rate_or_show_cafe(update, context):
+    query = update.inline_query.query
+    match_more = re.match(r'Подробнее:', query)
+    if match_more.group(0) == 'Подробнее:':
+        id_num = 0
+        results = []
+        for cafe_name in context.user_data['cafe_name']:
+            id_num += 1
+            article = InlineQueryResultArticle(
+                id=str(id_num), title=cafe_name.capitalize(),
+                description='Посмотреть оценку',
+                input_message_content=InputTextMessageContent(message_text=f'Хочу узнать оценку '
+                                                                           f'{cafe_name.capitalize()}'))
+            results.append(article)
+        update.inline_query.answer(results, cache_time=1)
+
+'''''
 def add_or_rate_cafe(update, context):
     query = update.inline_query.query
     if query == '':
@@ -45,283 +96,5 @@ def add_or_rate_cafe(update, context):
             thumb_url=INFO_ICON, thumb_width=48, thumb_height=48
         )]
     update.inline_query.answer(results, cache_time=1)
+'''
 
-
-def add_cafe(update, context):
-    text = update.message.text
-    if text == 'Заново':
-        context.bot.send_message(chat_id=update.effective_chat.id,
-                                 text='Напишите название заведения:',
-                                 reply_markup=rate_keyboard())
-        return 'add_cafe_name'
-    if 'Cafe_name' in text:
-        context.bot.delete_message(chat_id=update.effective_chat.id, message_id=update.message.message_id)
-        context.bot.send_message(chat_id=update.effective_chat.id,
-                                 text='После @club_zavtrak_bot напишите название заведения')
-        return ConversationHandler.END
-    else:
-        context.bot.delete_message(chat_id=update.effective_chat.id, message_id=update.message.message_id)
-        text = text.split()
-        context.user_data['cafe_name'] = text[3:]
-        cafe_name = context.user_data['cafe_name']
-        context.bot.send_message(chat_id=update.effective_chat.id,
-                                 parse_mode='HTML',
-                                 text=f'Оцените вкус еды в <b>"{cafe_name}"</b> от 0 до 1.5',
-                                 reply_markup=rate_keyboard())
-        return 'rate_taste'
-
-
-def add_cafe_name(update, context):
-    if update.message.text == 'Выйти':
-        return exit_rating(update, context)
-    cafe_name = update.message.text
-    context.user_data['cafe_name'] = cafe_name
-    context.bot.send_message(chat_id=update.effective_chat.id,
-                             parse_mode='HTML',
-                             text=f'Оцените вкус еды в <b>"{cafe_name}"</b> от 0 до 1.5')
-    return 'rate_taste'
-
-
-def rate_taste(update, context):
-    rating = update.message.text
-    cafe_name = context.user_data['cafe_name']
-    if update.message.text == 'Пропустить':
-        context.user_data['taste'] = 'Без оценки'
-        update.message.reply_text(f'Оцените подачу в <b>"{cafe_name}"</b> от 0 до 1.5',
-                                  parse_mode='HTML')
-        return 'rate_supply'
-    elif update.message.text == 'Заново':
-        return add_cafe(update, context)
-    elif update.message.text == 'Выйти':
-        return exit_rating(update, context)
-    else:
-        try:
-            if 0 <= float(rating) <= 1.5:
-                context.user_data['taste'] = rating
-                update.message.reply_text(f'Оцените подачу в <b>"{cafe_name}"</b> от 0 до 1.5',
-                                          parse_mode='HTML')
-                return 'rate_supply'
-            else:
-                update.message.reply_text('Пожалуйста, введите число от 0 до 1.5')
-                return 'rate_taste'
-        except ValueError:
-            update.message.reply_text('Пожалуйста, введите число от 0 до 1.5')
-            return 'rate_taste'
-
-
-def rate_supply(update, context):
-    rating = update.message.text
-    cafe_name = context.user_data['cafe_name']
-    if update.message.text == 'Пропустить':
-        context.user_data['supply'] = 'Без оценки'
-        update.message.reply_text(f'Оцените сервис в <b>"{cafe_name}"</b> от 0 до 1.5',
-                                  parse_mode='HTML')
-        return 'rate_service'
-    elif update.message.text == 'Заново':
-        return add_cafe(update, context)
-    elif update.message.text == 'Выйти':
-        return exit_rating(update, context)
-    else:
-        try:
-            if 0 <= float(rating) <= 1.5:
-                context.user_data['supply'] = rating
-                update.message.reply_text(f'Оцените сервис в <b>"{cafe_name}"</b> от 0 до 1.5',
-                                          parse_mode='HTML')
-                return 'rate_service'
-            else:
-                update.message.reply_text('Пожалуйста, введите число от 0 до 1.5')
-                return 'rate_supply'
-        except ValueError:
-            update.message.reply_text('Пожалуйста, введите число от 0 до 1.5')
-            return 'rate_supply'
-
-
-def rate_service(update, context):
-    rating = update.message.text
-    cafe_name = context.user_data['cafe_name']
-    if update.message.text == 'Пропустить':
-        context.user_data['service'] = 'Без оценки'
-        update.message.reply_text(f'Оцените интерьер в <b>"{cafe_name}"</b> от 0 до 1.5',
-                                  parse_mode='HTML')
-        return 'rate_interior'
-    elif update.message.text == 'Заново':
-        return add_cafe(update, context)
-    elif update.message.text == 'Выйти':
-        return exit_rating(update, context)
-    else:
-        try:
-            if 0 <= float(rating) <= 1.5:
-                context.user_data['service'] = rating
-                update.message.reply_text(f'Оцените интерьер в <b>"{cafe_name}"</b> от 0 до 1.5',
-                                          parse_mode='HTML')
-                return 'rate_interior'
-            else:
-                update.message.reply_text('Пожалуйста, введите число от 0 до 1.5',
-                                          parse_mode='HTML')
-                return 'rate_service'
-        except ValueError:
-            update.message.reply_text('Пожалуйста, введите число от 0 до 1.5',
-                                      parse_mode='HTML')
-            return 'rate_service'
-
-
-def rate_interior(update, context):
-    rating = update.message.text
-    cafe_name = context.user_data['cafe_name']
-    if update.message.text == 'Пропустить':
-        context.user_data['interior'] = 'Без оценки'
-        update.message.reply_text(f'Оцените атмосферу в <b>"{cafe_name}"</b> от 0 до 1.5',
-                                  parse_mode='HTML')
-        return 'rate_atmosphere'
-    elif update.message.text == 'Заново':
-        return add_cafe(update, context)
-    elif update.message.text == 'Выйти':
-        return exit_rating(update, context)
-    else:
-        try:
-            if 0 <= float(rating) <= 1.5:
-                context.user_data['interior'] = rating
-                update.message.reply_text(f'Оцените атмосферу в <b>"{cafe_name}"</b> от 0 до 1.5',
-                                          parse_mode='HTML')
-                return 'rate_atmosphere'
-            else:
-                update.message.reply_text('Пожалуйста, введите число от 0 до 1.5')
-                return 'rate_interior'
-        except ValueError:
-            update.message.reply_text('Пожалуйста, введите число от 0 до 1.5')
-            return 'rate_interior'
-
-
-def rate_atmosphere(update, context):
-    rating = update.message.text
-    cafe_name = context.user_data['cafe_name']
-    if update.message.text == 'Пропустить':
-        context.user_data['atmosphere'] = 'Без оценки'
-        update.message.reply_text(f'Оцените маленькие детали в <b>"{cafe_name}"</b> от 0 до 1.5',
-                                  parse_mode='HTML')
-        return 'rate_details'
-    elif update.message.text == 'Заново':
-        return add_cafe(update, context)
-    elif update.message.text == 'Выйти':
-        return exit_rating(update, context)
-    else:
-        try:
-            if 0 <= float(rating) <= 1.5:
-                context.user_data['atmosphere'] = rating
-                update.message.reply_text(f'Оцените маленькие детали в <b>"{cafe_name}"</b> от 0 до 1.5',
-                                          parse_mode='HTML')
-                return 'rate_details'
-            else:
-                update.message.reply_text('Пожалуйста, введите число от 0 до 1.5')
-                return 'rate_atmosphere'
-        except ValueError:
-            update.message.reply_text('Пожалуйста, введите число от 0 до 1.5')
-            return 'rate_atmosphere'
-
-
-def rate_details(update, context):
-    rating = update.message.text
-    cafe_name = context.user_data['cafe_name']
-    if update.message.text == 'Пропустить':
-        context.user_data['details'] = 'Без оценки'
-        update.message.reply_text(f'Добавьте дополнительный балл для <b>"{cafe_name}"</b> от 0 до 1 по желанию',
-                                  parse_mode='HTML')
-        return 'add_point'
-    elif update.message.text == 'Заново':
-        return add_cafe(update, context)
-    elif update.message.text == 'Выйти':
-        return exit_rating(update, context)
-    else:
-        try:
-            if 0 <= float(rating) <= 1.5:
-                context.user_data['details'] = rating
-                update.message.reply_text(f'Добавьте дополнительный балл для <b>"{cafe_name}"</b> '
-                                          'от 0 до 1 по желанию',
-                                          parse_mode='HTML')
-                return 'add_point'
-            else:
-                update.message.reply_text('Пожалуйста, введите число от 0 до 1')
-                return 'rate_details'
-        except ValueError:
-            update.message.reply_text('Пожалуйста, введите число от 0 до 1')
-            return 'rate_details'
-
-
-def add_point(update, context):
-    point = update.message.text
-    cafe_name = context.user_data['cafe_name']
-    if update.message.text == 'Пропустить':
-        context.user_data['point'] = 'Без оценки'
-        update.message.reply_text(f'Добавьте комментарий для <b>"{cafe_name}"</b>',
-                                  parse_mode='HTML')
-        return 'add_comment'
-    elif update.message.text == 'Заново':
-        return add_cafe(update, context)
-    elif update.message.text == 'Выйти':
-        return exit_rating(update, context)
-    else:
-        try:
-            if 0 <= float(point) <= 1:
-                context.user_data['point'] = point
-                update.message.reply_text(f'Добавьте комментарий для <b>"{cafe_name}"</b>',
-                                          parse_mode='HTML')
-                return 'add_comment'
-            else:
-                update.message.reply_text('Пожалуйста, введите число от 0 до 1')
-                return 'rate_point'
-        except ValueError:
-            update.message.reply_text('Пожалуйста, введите число от 0 до 1')
-            return 'rate_point'
-
-
-def add_comment(update, context):
-    if update.message.text == 'Пропустить':
-        context.user_data['comment'] = 'Без комментариев'
-        comment = context.user_data['comment']
-    elif update.message.text == 'Выйти':
-        return exit_rating(update, context)
-    else:
-        comment = update.message.text
-        context.user_data['comment'] = comment
-    cafe_name = context.user_data['cafe_name']
-    taste = context.user_data['taste']
-    supply = context.user_data['supply']
-    service = context.user_data['service']
-    interior = context.user_data['interior']
-    atmosphere = context.user_data['atmosphere']
-    details = context.user_data['details']
-    point = context.user_data['point']
-    summ = 0
-    values = context.user_data.values()
-    list_values = list(values)
-    for rating in list_values[1:8]:
-        try:
-            summ = summ + float(rating)
-        except ValueError:
-            continue
-    if summ == 0:
-        summ = 'Без оценки'
-    update.message.reply_text(f'Название: <b>{cafe_name}</b>\n'
-                              f'Вкус - <b>{taste}</b>\n'
-                              f'Подача - <b>{supply}</b>\n'
-                              f'Сервис - <b>{service}</b>\n'
-                              f'Интерьер - <b>{interior}</b>\n'
-                              f'Атмосфера - <b>{atmosphere}</b>\n'
-                              f'Детали - <b>{details}</b>\n'
-                              f'Дополнительный балл - <b>{point}</b>\n'
-                              f'Комментарий: <b>{comment}</b>\n\n'
-                              f'<b>Итого: {summ}</b>',
-                              parse_mode='HTML')
-    context.user_data.clear()
-    return ConversationHandler.END
-
-
-def exit_rating(update, context):
-    update.message.reply_text('Оценка удалена. До свидания!',
-                              reply_markup=ReplyKeyboardRemove())
-    context.user_data.clear()
-    return ConversationHandler.END
-
-
-def dont_know(update, context):
-    update.message.reply_text('Я вас не понимаю')
