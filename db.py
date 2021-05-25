@@ -11,6 +11,16 @@ def add_cafe_in_list(db, chat_id, cafe_name):
         cafe = {
             'chat_id': chat_id,
             'cafe_name': cafe_name.lower(),
+            'rate': False,
+            'about_cafe': {'taste': 'Без оценки',
+                           'supply': 'Без оценки',
+                           'service': 'Без оценки',
+                           'interior': 'Без оценки',
+                           'atmosphere': 'Без оценки',
+                           'details': 'Без оценки',
+                           'point': 'Без оценки',
+                           'comment': 'Без комментариев',
+                           'summ': 'Без оценки'}
         }
         db.cafe.insert_one(cafe)
         return cafe
@@ -18,12 +28,17 @@ def add_cafe_in_list(db, chat_id, cafe_name):
         return True
 
 
-def find_cafe(db, cafe_name):
-    if cafe_name == '':
-        return False
-    cafe_list = db.cafe.find_one({'cafe_name': {'$regex': f'^{cafe_name.lower()}'}})
+def find_unrate_cafe(db, chat_id):
+    cafe_list = db.cafe.find_one({'chat_id': chat_id, 'rate': False})
     if cafe_list is None:
         return False
     else:
-        cafe_name = cafe_list['cafe_name']
-        return cafe_name
+        return db.cafe.find({'chat_id': chat_id, 'rate': False})
+
+
+def find_rate_cafe(db, chat_id):
+    cafe_list = db.cafe.find_one({'chat_id': chat_id, 'rate': True})
+    if cafe_list is None:
+        return False
+    else:
+        return db.cafe.find({'chat_id': chat_id, 'rate': True})
