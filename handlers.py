@@ -3,7 +3,7 @@ import re
 from db import db, find_rate_cafe, find_unrate_cafe, get_about_cafe
 from telegram import InlineQueryResultArticle, InputTextMessageContent
 from settings import HELP
-from utils import main_keyboard, show_rating_keyboard, rating_keyboard, rate_again_keyboard
+from utils import main_keyboard, show_rating_keyboard, rating_keyboard, edit_keyboard
 
 
 def greet_user(update, context):
@@ -91,8 +91,8 @@ def rate_or_show_cafe(update, context):
                         description='Оценить заведение',
                         input_message_content=InputTextMessageContent(message_text=f'Хочу оценить заведение '
                                                                                    f'{cafe_name.capitalize()}'))
-            results.append(article)
-        update.inline_query.answer(results, cache_time=1)
+            results.append(article, cache_time=1)
+        update.inline_query.answer(results)
     elif match_more.group(0) == 'Удалить:':
         id_num = 0
         results = []
@@ -106,10 +106,23 @@ def rate_or_show_cafe(update, context):
                         description='Удалить заведение из списка',
                         input_message_content=InputTextMessageContent(message_text=f'Хочу удалить заведение '
                                                                                    f'{cafe_name.capitalize()}'))
-            results.append(article)
-        update.inline_query.answer(results, cache_time=1)
+            results.append(article, cache_time=1)
+        update.inline_query.answer(results)
     elif match_more.group(0) == 'Редактировать:':
-        print('edit')
+        cafe_name = context.user_data['cafe_name']
+        results = [
+            InlineQueryResultArticle(
+                    id='1', title=cafe_name.capitalize(),
+                    description='Оценить заведение заново',
+                    input_message_content=InputTextMessageContent(message_text=f'Хочу оценить заведение '
+                                                                  f'{cafe_name.capitalize()}')),
+            InlineQueryResultArticle(
+                    id='2', title=cafe_name.capitalize(),
+                    description='Удалить заведение',
+                    input_message_content=InputTextMessageContent(message_text=f'Хочу удалить заведение '
+                                                                  f'{cafe_name.capitalize()}'))]
+        update.inline_query.answer(results, cache_time=1)
+        context.user_data['cafe_name'] = cafe_name
 
 
 def show_rating_or_rate_cafe(update, context):
@@ -141,6 +154,6 @@ def show_rating_or_rate_cafe(update, context):
                                       f'Комментарий: <b>{comment}</b>\n\n'
                                       f'<b>Итого: {summ}</b>',
                                  parse_mode='HTML',
-                                 reply_markup=rate_again_keyboard(cafe_name))
+                                 reply_markup=edit_keyboard(cafe_name))
     elif text[0:3] == ['Хочу', 'удалить', 'заведение']:
         pass

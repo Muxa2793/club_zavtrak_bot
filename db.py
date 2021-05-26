@@ -46,3 +46,18 @@ def find_rate_cafe(db, chat_id):
 
 def get_about_cafe(db, chat_id, cafe_name):
     return db.cafe.find_one({'chat_id': chat_id, 'cafe_name': cafe_name.lower()})
+
+
+def change_rate_status(db, chat_id, cafe_name):
+    cafe = db.cafe.find_one({'chat_id': chat_id, 'cafe_name': cafe_name.lower()})
+    if cafe:
+        if cafe['rate'] is True:
+            db.cafe.update_one(
+                {'_id': cafe['_id']},
+                {'$set': {'rate': False}}
+            )
+        elif cafe['rate'] is False:
+            db.cafe.update_one(
+                {'_id': cafe['_id']},
+                {'$set': {'rate': True}}
+            )

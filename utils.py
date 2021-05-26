@@ -16,6 +16,11 @@ def rate_end_keyboard():
     return ReplyKeyboardMarkup([['Закончить', 'Заново']], resize_keyboard=True)
 
 
+def rate_again_keyboard(cafe_name):
+    return ReplyKeyboardMarkup([[f'Оценить заново заведение {cafe_name}'],
+                                ['Выйти']], resize_keyboard=True)
+
+
 def show_rating_keyboard():
     keyboard = [
         [
@@ -36,7 +41,7 @@ def rating_keyboard():
     return InlineKeyboardMarkup(keyboard)
 
 
-def rate_again_keyboard(cafe_name):
+def edit_keyboard(cafe_name):
     keyboard = [
         [
             InlineKeyboardButton('Редактировать', switch_inline_query_current_chat=f'Редактировать: {cafe_name}',

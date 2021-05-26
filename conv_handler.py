@@ -1,6 +1,6 @@
 
 from rating import (rate_cafe, add_cafe_name, rate_taste, rate_supply, rate_service, rate_interior,
-                    rate_atmosphere, rate_details, add_point, add_comment, rate_dont_know)
+                    rate_atmosphere, rate_details, add_point, add_comment, rate_dont_know, rate_again)
 
 from telegram.ext import MessageHandler, Filters, ConversationHandler
 from db import db, add_cafe_in_list
@@ -15,7 +15,8 @@ RATE_CAFE = ConversationHandler(
         'rate_atmosphere': [MessageHandler(Filters.text, rate_atmosphere)],
         'rate_details': [MessageHandler(Filters.text, rate_details)],
         'add_point': [MessageHandler(Filters.text, add_point)],
-        'add_comment': [MessageHandler(Filters.text, add_comment)]
+        'add_comment': [MessageHandler(Filters.text, add_comment)],
+        'rate_again': [MessageHandler(Filters.text, rate_again)]
     },
     fallbacks=[MessageHandler(Filters.text | Filters.regex('^(Хочу оценить заведение)') | Filters.photo |
                               Filters.video | Filters.location | Filters.document,
