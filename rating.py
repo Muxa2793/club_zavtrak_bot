@@ -1,20 +1,28 @@
 from telegram.ext import ConversationHandler
-from utils import rate_keyboard, main_keyboard
+from utils import rate_keyboard, main_keyboard, rate_again_keyboard
+from db import db, get_about_cafe, change_rate_status
 
 
 def rate_cafe(update, context):
     update.message.text
-    print(update.message.text)
     text = update.message.text
     context.bot.delete_message(chat_id=update.effective_chat.id, message_id=update.message.message_id)
     text = text.split()
     context.user_data['cafe_name'] = ' '.join(text[3:])
     cafe_name = context.user_data['cafe_name']
-    context.bot.send_message(chat_id=update.effective_chat.id,
-                             parse_mode='HTML',
-                             text=f'Оцените вкус еды в <b>"{cafe_name}"</b> от 0 до 1.5',
-                             reply_markup=rate_keyboard())
-    return 'rate_taste'
+    find_cafe = get_about_cafe(db, update.effective_chat.id, cafe_name)
+    if find_cafe['rate'] is False:
+        context.bot.send_message(chat_id=update.effective_chat.id,
+                                 parse_mode='HTML',
+                                 text=f'Оцените вкус еды в <b>"{cafe_name}"</b> от 0 до 1.5',
+                                 reply_markup=rate_keyboard())
+        return 'rate_taste'
+    elif find_cafe['rate'] is True:
+        context.bot.send_message(chat_id=update.effective_chat.id,
+                                 parse_mode='HTML',
+                                 text=f'Вы уже оценили заведение "{cafe_name}". Хотите оценить ещё раз?',
+                                 reply_markup=rate_again_keyboard(cafe_name))
+        return 'rate_again'
 
 
 def add_cafe_name(update, context):
@@ -214,10 +222,10 @@ def add_point(update, context):
                 return 'add_comment'
             else:
                 update.message.reply_text('Пожалуйста, введите число от 0 до 1')
-                return 'rate_point'
+                return 'add_point'
         except ValueError:
             update.message.reply_text('Пожалуйста, введите число от 0 до 1')
-            return 'rate_point'
+            return 'add_point'
 
 
 def add_comment(update, context):
@@ -260,6 +268,18 @@ def add_comment(update, context):
                               parse_mode='HTML',
                               reply_markup=main_keyboard())
     return ConversationHandler.END
+
+
+def rate_again(update, context):
+    answer = update.message.text
+    cafe_name = context.user_data['cafe_name']
+    if answer == f'Оценить заново заведение {cafe_name}':
+        change_rate_status(db, update.effective_chat.id, cafe_name)
+        return rate_cafe(update, context)
+    elif answer == 'Выйти':
+        update.message.reply_text('До свидания!',
+                                  reply_markup=main_keyboard())
+        return ConversationHandler.END
 
 
 def exit_rating(update, context):
