@@ -26,12 +26,12 @@ RATE_CAFE = ConversationHandler(
 
 
 def add_cafe(update, context):
-    update.message.reply_text('Введите название кафе')
+    update.message.reply_text('Введите название кафе:')
     return 'add_cafe_name'
 
 
 def dont_know(update, context):
-    update.message.reply_text('Я вас не понимаю')
+    update.message.reply_text('Я вас не понимаю!')
 
 
 def add_cafe_name(update, context):
