@@ -61,3 +61,20 @@ def change_rate_status(db, chat_id, cafe_name):
                 {'_id': cafe['_id']},
                 {'$set': {'rate': True}}
             )
+
+
+def add_cafe_rate(db, chat_id, cafe_data, summ):
+    cafe = db.cafe.find_one({'chat_id': chat_id, 'cafe_name': cafe_data['cafe_name'].lower()})
+    if cafe:
+        db.cafe.update_one(
+            {'_id': cafe['_id']},
+            {'$set': {'about_cafe': {'taste': cafe_data['taste'],
+                                     'supply': cafe_data['supply'],
+                                     'service': cafe_data['service'],
+                                     'interior': cafe_data['interior'],
+                                     'atmosphere': cafe_data['atmosphere'],
+                                     'details': cafe_data['details'],
+                                     'point': cafe_data['point'],
+                                     'comment': cafe_data['comment'],
+                                     'summ': summ}}}
+        )
