@@ -1,5 +1,5 @@
 
-from rating import (rate_cafe, add_cafe_name, rate_taste, rate_supply, rate_service, rate_interior,
+from rating import (rate_cafe, rate_repeat, rate_taste, rate_supply, rate_service, rate_interior,
                     rate_atmosphere, rate_details, add_point, add_comment, rate_dont_know, rate_again)
 
 from telegram.ext import MessageHandler, Filters, ConversationHandler
@@ -8,6 +8,7 @@ from db import db, add_cafe_in_list
 RATE_CAFE = ConversationHandler(
     entry_points=[MessageHandler(Filters.regex('^(Хочу оценить заведение)'), rate_cafe)],
     states={
+        'rate_repeat': [MessageHandler(Filters.text, rate_repeat)],
         'rate_taste': [MessageHandler(Filters.text, rate_taste)],
         'rate_supply': [MessageHandler(Filters.text, rate_supply)],
         'rate_service': [MessageHandler(Filters.text, rate_service)],

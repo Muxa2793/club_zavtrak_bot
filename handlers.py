@@ -62,67 +62,73 @@ def show_cafe(update, context):
 
 def rate_or_show_cafe(update, context):
     query = update.inline_query.query
-    match_more = re.match(r'Подробнее:|Оценить:|Удалить:|Редактировать:', query)
-    if match_more.group(0) == 'Подробнее:':
-        id_num = 0
-        results = []
-        cafe_list = context.user_data['cafe_name']
-        r = re.compile(f'{query[11:].lower()}.*')
-        cafe_list_filter = list(filter(r.match, cafe_list))
-        for cafe_name in cafe_list_filter:
-            id_num += 1
-            article = InlineQueryResultArticle(
-                        id=str(id_num), title=cafe_name.capitalize(),
-                        description='Посмотреть оценку',
-                        input_message_content=InputTextMessageContent(message_text=f'Хочу узнать оценку '
-                                                                                   f'{cafe_name.capitalize()}'))
-            results.append(article)
-        update.inline_query.answer(results, cache_time=1)
-    elif match_more.group(0) == 'Оценить:':
-        id_num = 0
-        results = []
-        cafe_list = context.user_data['cafe_name']
-        r = re.compile(f'{query[9:].lower()}.*')
-        cafe_list_filter = list(filter(r.match, cafe_list))
-        for cafe_name in cafe_list_filter:
-            id_num += 1
-            article = InlineQueryResultArticle(
-                        id=str(id_num), title=cafe_name.capitalize(),
-                        description='Оценить заведение',
+    try:
+        match_more = re.match(r'Подробнее:|Оценить:|Удалить:|Редактировать:', query)
+    except AttributeError:
+        pass
+    try:
+        if match_more.group(0) == 'Подробнее:':
+            id_num = 0
+            results = []
+            cafe_list = context.user_data['cafe_name']
+            r = re.compile(f'{query[11:].lower()}.*')
+            cafe_list_filter = list(filter(r.match, cafe_list))
+            for cafe_name in cafe_list_filter:
+                id_num += 1
+                article = InlineQueryResultArticle(
+                            id=str(id_num), title=cafe_name.capitalize(),
+                            description='Посмотреть оценку',
+                            input_message_content=InputTextMessageContent(message_text=f'Хочу узнать оценку '
+                                                                                       f'{cafe_name.capitalize()}'))
+                results.append(article)
+            update.inline_query.answer(results, cache_time=1)
+        elif match_more.group(0) == 'Оценить:':
+            id_num = 0
+            results = []
+            cafe_list = context.user_data['cafe_name']
+            r = re.compile(f'{query[9:].lower()}.*')
+            cafe_list_filter = list(filter(r.match, cafe_list))
+            for cafe_name in cafe_list_filter:
+                id_num += 1
+                article = InlineQueryResultArticle(
+                            id=str(id_num), title=cafe_name.capitalize(),
+                            description='Оценить заведение',
+                            input_message_content=InputTextMessageContent(message_text=f'Хочу оценить заведение '
+                                                                                       f'{cafe_name.capitalize()}'))
+                results.append(article)
+            update.inline_query.answer(results, cache_time=1)
+        elif match_more.group(0) == 'Удалить:':
+            id_num = 0
+            results = []
+            cafe_list = context.user_data['cafe_name']
+            r = re.compile(f'{query[9:].lower()}.*')
+            cafe_list_filter = list(filter(r.match, cafe_list))
+            for cafe_name in cafe_list_filter:
+                id_num += 1
+                article = InlineQueryResultArticle(
+                            id=str(id_num), title=cafe_name.capitalize(),
+                            description='Удалить заведение из списка',
+                            input_message_content=InputTextMessageContent(message_text=f'Хочу удалить заведение '
+                                                                                       f'{cafe_name.capitalize()}'))
+                results.append(article)
+            update.inline_query.answer(results, cache_time=1)
+        elif match_more.group(0) == 'Редактировать:':
+            cafe_name = context.user_data['cafe_name']
+            results = [
+                InlineQueryResultArticle(
+                        id='1', title=cafe_name.capitalize(),
+                        description='Оценить заведение заново',
                         input_message_content=InputTextMessageContent(message_text=f'Хочу оценить заведение '
-                                                                                   f'{cafe_name.capitalize()}'))
-            results.append(article, cache_time=1)
-        update.inline_query.answer(results)
-    elif match_more.group(0) == 'Удалить:':
-        id_num = 0
-        results = []
-        cafe_list = context.user_data['cafe_name']
-        r = re.compile(f'{query[9:].lower()}.*')
-        cafe_list_filter = list(filter(r.match, cafe_list))
-        for cafe_name in cafe_list_filter:
-            id_num += 1
-            article = InlineQueryResultArticle(
-                        id=str(id_num), title=cafe_name.capitalize(),
-                        description='Удалить заведение из списка',
+                                                                                   f'{cafe_name.capitalize()}')),
+                InlineQueryResultArticle(
+                        id='2', title=cafe_name.capitalize(),
+                        description='Удалить заведение',
                         input_message_content=InputTextMessageContent(message_text=f'Хочу удалить заведение '
-                                                                                   f'{cafe_name.capitalize()}'))
-            results.append(article, cache_time=1)
-        update.inline_query.answer(results)
-    elif match_more.group(0) == 'Редактировать:':
-        cafe_name = context.user_data['cafe_name']
-        results = [
-            InlineQueryResultArticle(
-                    id='1', title=cafe_name.capitalize(),
-                    description='Оценить заведение заново',
-                    input_message_content=InputTextMessageContent(message_text=f'Хочу оценить заведение '
-                                                                  f'{cafe_name.capitalize()}')),
-            InlineQueryResultArticle(
-                    id='2', title=cafe_name.capitalize(),
-                    description='Удалить заведение',
-                    input_message_content=InputTextMessageContent(message_text=f'Хочу удалить заведение '
-                                                                  f'{cafe_name.capitalize()}'))]
-        update.inline_query.answer(results, cache_time=1)
-        context.user_data['cafe_name'] = cafe_name
+                                                                                   f'{cafe_name.capitalize()}'))]
+            update.inline_query.answer(results, cache_time=1)
+            context.user_data['cafe_name'] = cafe_name
+    except (TypeError, AttributeError):
+        pass
 
 
 def show_rating_or_rate_cafe(update, context):

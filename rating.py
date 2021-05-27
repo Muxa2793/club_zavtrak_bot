@@ -1,6 +1,6 @@
 from telegram.ext import ConversationHandler
 from utils import rate_keyboard, main_keyboard, rate_again_keyboard
-from db import db, get_about_cafe, change_rate_status
+from db import db, get_about_cafe, change_rate_status, add_cafe_rate
 
 
 def rate_cafe(update, context):
@@ -25,11 +25,10 @@ def rate_cafe(update, context):
         return 'rate_again'
 
 
-def add_cafe_name(update, context):
+def rate_repeat(update, context):
     if update.message.text == 'Выйти':
         return exit_rating(update, context)
-    cafe_name = update.message.text
-    context.user_data['cafe_name'] = cafe_name
+    cafe_name = context.user_data['cafe_name']
     context.bot.send_message(chat_id=update.effective_chat.id,
                              parse_mode='HTML',
                              text=f'Оцените вкус еды в <b>"{cafe_name}"</b> от 0 до 1.5')
@@ -45,7 +44,7 @@ def rate_taste(update, context):
                                   parse_mode='HTML')
         return 'rate_supply'
     elif update.message.text == 'Заново':
-        return rate_cafe(update, context)
+        return rate_repeat(update, context)
     elif update.message.text == 'Выйти':
         return exit_rating(update, context)
     else:
@@ -72,7 +71,7 @@ def rate_supply(update, context):
                                   parse_mode='HTML')
         return 'rate_service'
     elif update.message.text == 'Заново':
-        return rate_cafe(update, context)
+        return rate_repeat(update, context)
     elif update.message.text == 'Выйти':
         return exit_rating(update, context)
     else:
@@ -99,7 +98,7 @@ def rate_service(update, context):
                                   parse_mode='HTML')
         return 'rate_interior'
     elif update.message.text == 'Заново':
-        return rate_cafe(update, context)
+        return rate_repeat(update, context)
     elif update.message.text == 'Выйти':
         return exit_rating(update, context)
     else:
@@ -128,7 +127,7 @@ def rate_interior(update, context):
                                   parse_mode='HTML')
         return 'rate_atmosphere'
     elif update.message.text == 'Заново':
-        return rate_cafe(update, context)
+        return rate_repeat(update, context)
     elif update.message.text == 'Выйти':
         return exit_rating(update, context)
     else:
@@ -155,7 +154,7 @@ def rate_atmosphere(update, context):
                                   parse_mode='HTML')
         return 'rate_details'
     elif update.message.text == 'Заново':
-        return rate_cafe(update, context)
+        return rate_repeat(update, context)
     elif update.message.text == 'Выйти':
         return exit_rating(update, context)
     else:
@@ -182,15 +181,23 @@ def rate_details(update, context):
                                   parse_mode='HTML')
         return 'add_point'
     elif update.message.text == 'Заново':
-        return rate_cafe(update, context)
+        return rate_repeat(update, context)
     elif update.message.text == 'Выйти':
         return exit_rating(update, context)
     else:
         try:
             if 0 <= float(rating) <= 1.5:
                 context.user_data['details'] = rating
-                update.message.reply_text(f'Добавьте дополнительный балл для <b>"{cafe_name}"</b> '
-                                          'от 0 до 1 по желанию',
+                summ = 0
+                values = context.user_data.values()
+                list_values = list(values)
+                for rating in list_values[1:7]:
+                    try:
+                        summ = summ + float(rating)
+                    except ValueError:
+                        summ = 'Без оценки'
+                update.message.reply_text(f'Итого: <b>{summ}</b>\nДобавьте дополнительный балл для'
+                                          f'<b>"{cafe_name}"</b> от 0 до 1 по желанию',
                                           parse_mode='HTML')
                 return 'add_point'
             else:
@@ -210,7 +217,7 @@ def add_point(update, context):
                                   parse_mode='HTML')
         return 'add_comment'
     elif update.message.text == 'Заново':
-        return rate_cafe(update, context)
+        return rate_repeat(update, context)
     elif update.message.text == 'Выйти':
         return exit_rating(update, context)
     else:
@@ -232,6 +239,8 @@ def add_comment(update, context):
     if update.message.text == 'Пропустить':
         context.user_data['comment'] = 'Без комментариев'
         comment = context.user_data['comment']
+    elif update.message.text == 'Заново':
+        return rate_repeat(update, context)
     elif update.message.text == 'Выйти':
         return exit_rating(update, context)
     else:
@@ -255,6 +264,8 @@ def add_comment(update, context):
             continue
     if summ == 0:
         summ = 'Без оценки'
+    change_rate_status(db, update.effective_chat.id, cafe_name)
+    add_cafe_rate(db, update.effective_chat.id, context.user_data, str(summ))
     update.message.reply_text(f'Название: <b>{cafe_name}</b>\n'
                               f'Вкус - <b>{taste}</b>\n'
                               f'Подача - <b>{supply}</b>\n'
