@@ -3,8 +3,8 @@ from telegram import ReplyKeyboardMarkup, InlineKeyboardButton, InlineKeyboardMa
 
 def main_keyboard():
     return ReplyKeyboardMarkup([['Добавить заведение'],
-                               ['Посещённые заведения'],
-                               ['Не посещённые заведения']],
+                               ['Не посещённые заведения'],
+                               ['Посещённые заведения']],
                                resize_keyboard=True)
 
 

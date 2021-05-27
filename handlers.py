@@ -10,15 +10,16 @@ def greet_user(update, context):
     logging.info('Вызван /start')
 
     update.message.reply_text('Вас приветствует club_zavtrak_bot. Вы вызвали команду /start.\n'
-                              'Бот создан для оценки ресторанных заведений по методике "скури" и '
+                              'Бот создан для оценки ресторанных заведений по методике <b>"скури"</b> и '
                               'ведения базы посещённых ресторанов.',
-                              reply_markup=main_keyboard())
+                              reply_markup=main_keyboard(),
+                              parse_mode='HTML')
 
 
 def help_user(update, context):
     logging.info('Вызван /help')
 
-    update.message.reply_text(HELP)
+    update.message.reply_text(HELP, parse_mode='HTML')
 
 
 def show_cafe(update, context):

@@ -1,3 +1,4 @@
+from decimal import Decimal
 from telegram.ext import ConversationHandler
 from utils import rate_keyboard, main_keyboard, rate_again_keyboard
 from db import db, get_about_cafe, change_rate_status, add_cafe_rate
@@ -49,7 +50,7 @@ def rate_taste(update, context):
         return exit_rating(update, context)
     else:
         try:
-            if 0 <= float(rating) <= 1.5:
+            if 0 <= Decimal(rating) <= 1.5:
                 context.user_data['taste'] = rating
                 update.message.reply_text(f'Оцените подачу в <b>"{cafe_name}"</b> от 0 до 1.5',
                                           parse_mode='HTML')
@@ -76,7 +77,7 @@ def rate_supply(update, context):
         return exit_rating(update, context)
     else:
         try:
-            if 0 <= float(rating) <= 1.5:
+            if 0 <= Decimal(rating) <= 1.5:
                 context.user_data['supply'] = rating
                 update.message.reply_text(f'Оцените сервис в <b>"{cafe_name}"</b> от 0 до 1.5',
                                           parse_mode='HTML')
@@ -103,7 +104,7 @@ def rate_service(update, context):
         return exit_rating(update, context)
     else:
         try:
-            if 0 <= float(rating) <= 1.5:
+            if 0 <= Decimal(rating) <= 1.5:
                 context.user_data['service'] = rating
                 update.message.reply_text(f'Оцените интерьер в <b>"{cafe_name}"</b> от 0 до 1.5',
                                           parse_mode='HTML')
@@ -132,7 +133,7 @@ def rate_interior(update, context):
         return exit_rating(update, context)
     else:
         try:
-            if 0 <= float(rating) <= 1.5:
+            if 0 <= Decimal(rating) <= 1.5:
                 context.user_data['interior'] = rating
                 update.message.reply_text(f'Оцените атмосферу в <b>"{cafe_name}"</b> от 0 до 1.5',
                                           parse_mode='HTML')
@@ -159,7 +160,7 @@ def rate_atmosphere(update, context):
         return exit_rating(update, context)
     else:
         try:
-            if 0 <= float(rating) <= 1.5:
+            if 0 <= Decimal(rating) <= 1.5:
                 context.user_data['atmosphere'] = rating
                 update.message.reply_text(f'Оцените маленькие детали в <b>"{cafe_name}"</b> от 0 до 1.5',
                                           parse_mode='HTML')
@@ -186,17 +187,17 @@ def rate_details(update, context):
         return exit_rating(update, context)
     else:
         try:
-            if 0 <= float(rating) <= 1.5:
+            if 0 <= Decimal(rating) <= 1.5:
                 context.user_data['details'] = rating
                 summ = 0
                 values = context.user_data.values()
                 list_values = list(values)
                 for rating in list_values[1:7]:
                     try:
-                        summ = summ + float(rating)
+                        summ = summ + Decimal(rating)
                     except ValueError:
                         summ = 'Без оценки'
-                update.message.reply_text(f'Итого: <b>{summ}</b>\nДобавьте дополнительный балл для'
+                update.message.reply_text(f'Итого: <b>{summ}</b>\nДобавьте дополнительный балл для '
                                           f'<b>"{cafe_name}"</b> от 0 до 1 по желанию',
                                           parse_mode='HTML')
                 return 'add_point'
@@ -222,7 +223,7 @@ def add_point(update, context):
         return exit_rating(update, context)
     else:
         try:
-            if 0 <= float(point) <= 1:
+            if 0 <= Decimal(point) <= 1:
                 context.user_data['point'] = point
                 update.message.reply_text(f'Добавьте комментарий для <b>"{cafe_name}"</b>',
                                           parse_mode='HTML')
@@ -259,7 +260,7 @@ def add_comment(update, context):
     list_values = list(values)
     for rating in list_values[1:8]:
         try:
-            summ = summ + float(rating)
+            summ = summ + Decimal(rating)
         except ValueError:
             continue
     if summ == 0:
