@@ -1,6 +1,6 @@
 import logging
 import re
-from db import db, find_rate_cafe, find_unrate_cafe, get_about_cafe
+from db import db, find_rate_cafe, find_unrate_cafe, get_about_cafe, delete_cafe
 from telegram import InlineQueryResultArticle, InputTextMessageContent
 from settings import HELP
 from utils import main_keyboard, show_rating_keyboard, rating_keyboard, edit_keyboard
@@ -26,16 +26,16 @@ def show_cafe(update, context):
     text = update.message.text
     context.bot.delete_message(chat_id=update.effective_chat.id, message_id=update.message.message_id)
     if text == 'Посещённые заведения':
+        context.user_data['rate'] = 'rate'
         cafe_find = find_rate_cafe(db, update.effective_chat.id)
-        if cafe_find is False:
+        if cafe_find == 'Список пуст':
             context.bot.send_message(chat_id=update.effective_chat.id, text='Cписок посещённых заведений пуст.')
         else:
             cafe_list = []
             context.user_data['cafe_name'] = []
-            x = context.user_data['cafe_name']
             for cafe in cafe_find:
                 cafe_list.append(cafe['cafe_name'].lower().capitalize() + ' - ' + cafe['about_cafe']['summ'])
-                x.append(cafe['cafe_name'])
+                context.user_data['cafe_name'].append(cafe['cafe_name'])
             cafe_list_string = '\n'.join(cafe_list)
             context.bot.send_message(chat_id=update.effective_chat.id,
                                      parse_mode='HTML',
@@ -43,16 +43,16 @@ def show_cafe(update, context):
                                           f'{cafe_list_string}',
                                      reply_markup=show_rating_keyboard())
     elif text == 'Не посещённые заведения':
+        context.user_data['rate'] = 'unrate'
         cafe_find = find_unrate_cafe(db, update.effective_chat.id)
-        if cafe_find is False:
+        if cafe_find == 'Список пуст':
             context.bot.send_message(chat_id=update.effective_chat.id, text='Вы ещё не оценили ни одного места')
         else:
             cafe_list = []
             context.user_data['cafe_name'] = []
-            x = context.user_data['cafe_name']
             for cafe in cafe_find:
                 cafe_list.append('- ' + cafe['cafe_name'].lower().capitalize())
-                x.append(cafe['cafe_name'])
+                context.user_data['cafe_name'].append(cafe['cafe_name'])
             cafe_list_string = '\n'.join(cafe_list)
             context.bot.send_message(chat_id=update.effective_chat.id,
                                      parse_mode='HTML',
@@ -72,49 +72,62 @@ def rate_or_show_cafe(update, context):
             id_num = 0
             results = []
             cafe_list = context.user_data['cafe_name']
-            r = re.compile(f'{query[11:].lower()}.*')
-            cafe_list_filter = list(filter(r.match, cafe_list))
-            for cafe_name in cafe_list_filter:
-                id_num += 1
-                article = InlineQueryResultArticle(
-                            id=str(id_num), title=cafe_name.capitalize(),
-                            description='Посмотреть оценку',
-                            input_message_content=InputTextMessageContent(message_text=f'Хочу узнать оценку '
-                                                                                       f'{cafe_name.capitalize()}'))
-                results.append(article)
-            update.inline_query.answer(results, cache_time=1)
+            if cafe_list == 'Список пуст':
+                pass
+            else:
+                r = re.compile(f'{query[11:].lower()}.*')
+                cafe_list_filter = list(filter(r.match, cafe_list))
+                for cafe_name in cafe_list_filter:
+                    id_num += 1
+                    article = InlineQueryResultArticle(
+                                id=str(id_num), title=cafe_name.capitalize(),
+                                description='Посмотреть оценку',
+                                input_message_content=InputTextMessageContent(message_text=f'Хочу узнать оценку '
+                                                                                        f'{cafe_name.capitalize()}'))
+                    results.append(article)
+                update.inline_query.answer(results, cache_time=1)
         elif match_more.group(0) == 'Оценить:':
             id_num = 0
             results = []
             cafe_list = context.user_data['cafe_name']
-            r = re.compile(f'{query[9:].lower()}.*')
-            cafe_list_filter = list(filter(r.match, cafe_list))
-            for cafe_name in cafe_list_filter:
-                id_num += 1
-                article = InlineQueryResultArticle(
-                            id=str(id_num), title=cafe_name.capitalize(),
-                            description='Оценить заведение',
-                            input_message_content=InputTextMessageContent(message_text=f'Хочу оценить заведение '
-                                                                                       f'{cafe_name.capitalize()}'))
-                results.append(article)
-            update.inline_query.answer(results, cache_time=1)
+            if cafe_list == 'Список пуст':
+                pass
+            else:
+                r = re.compile(f'{query[9:].lower()}.*')
+                cafe_list_filter = list(filter(r.match, cafe_list))
+                for cafe_name in cafe_list_filter:
+                    id_num += 1
+                    article = InlineQueryResultArticle(
+                                id=str(id_num), title=cafe_name.capitalize(),
+                                description='Оценить заведение',
+                                input_message_content=InputTextMessageContent(message_text=f'Хочу оценить заведение '
+                                                                                        f'{cafe_name.capitalize()}'))
+                    results.append(article)
+                update.inline_query.answer(results, cache_time=1)
         elif match_more.group(0) == 'Удалить:':
             id_num = 0
             results = []
             cafe_list = context.user_data['cafe_name']
-            r = re.compile(f'{query[9:].lower()}.*')
-            cafe_list_filter = list(filter(r.match, cafe_list))
-            for cafe_name in cafe_list_filter:
-                id_num += 1
-                article = InlineQueryResultArticle(
-                            id=str(id_num), title=cafe_name.capitalize(),
-                            description='Удалить заведение из списка',
-                            input_message_content=InputTextMessageContent(message_text=f'Хочу удалить заведение '
-                                                                                       f'{cafe_name.capitalize()}'))
-                results.append(article)
-            update.inline_query.answer(results, cache_time=1)
+            if cafe_list == 'Список пуст':
+                pass
+            else:
+                r = re.compile(f'{query[9:].lower()}.*')
+                cafe_list_filter = list(filter(r.match, cafe_list))
+                for cafe_name in cafe_list_filter:
+                    id_num += 1
+                    article = InlineQueryResultArticle(
+                                id=str(id_num), title=cafe_name.capitalize(),
+                                description='Удалить заведение из списка',
+                                input_message_content=InputTextMessageContent(message_text=f'Хочу удалить заведение '
+                                                                                        f'{cafe_name.capitalize()}'))
+                    results.append(article)
+                update.inline_query.answer(results, cache_time=1)
         elif match_more.group(0) == 'Редактировать:':
-            cafe_name = context.user_data['cafe_name']
+            if context.user_data['cafe_name'] == 'Список пуст':
+                pass
+            else:
+                print(context.user_data['cafe_name'])
+                cafe_name = query[15:]
             results = [
                 InlineQueryResultArticle(
                         id='1', title=cafe_name.capitalize(),
@@ -127,8 +140,7 @@ def rate_or_show_cafe(update, context):
                         input_message_content=InputTextMessageContent(message_text=f'Хочу удалить заведение '
                                                                                    f'{cafe_name.capitalize()}'))]
             update.inline_query.answer(results, cache_time=1)
-            context.user_data['cafe_name'] = cafe_name
-    except (TypeError, AttributeError):
+    except (TypeError):
         pass
 
 
@@ -162,5 +174,23 @@ def show_rating_or_rate_cafe(update, context):
                                       f'<b>Итого: {summ}</b>',
                                  parse_mode='HTML',
                                  reply_markup=edit_keyboard(cafe_name))
+        context.user_data['cafe_name'] = []
+        cafe_find = find_rate_cafe(db, update.effective_chat.id)
+        for cafe in cafe_find:
+            context.user_data['cafe_name'].append(cafe['cafe_name'])
     elif text[0:3] == ['Хочу', 'удалить', 'заведение']:
-        pass
+        delete_cafe(db, update.effective_chat.id, cafe_name)
+        context.user_data['cafe_name'] = []
+        if context.user_data['rate'] == 'rate':
+            cafe_find = find_rate_cafe(db, update.effective_chat.id)
+        elif context.user_data['rate'] == 'unrate':
+            cafe_find = find_unrate_cafe(db, update.effective_chat.id)
+        if cafe_find == 'Список пуст':
+            context.user_data['cafe_name'] = 'Список пуст'
+        else:
+            for cafe in cafe_find:
+                context.user_data['cafe_name'].append(cafe['cafe_name'])
+        context.bot.send_message(chat_id=update.effective_chat.id,
+                                 text=f'Заведение <b>{cafe_name}</b> удалено из базы данных.',
+                                 parse_mode='HTML',
+                                 reply_markup=main_keyboard())

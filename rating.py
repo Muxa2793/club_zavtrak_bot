@@ -191,8 +191,9 @@ def rate_details(update, context):
                 context.user_data['details'] = rating
                 summ = 0
                 values = context.user_data.values()
+                print(context.user_data)
                 list_values = list(values)
-                for rating in list_values[1:7]:
+                for rating in list_values[2:8]:
                     try:
                         summ = summ + Decimal(rating)
                     except ValueError:
@@ -258,7 +259,7 @@ def add_comment(update, context):
     summ = 0
     values = context.user_data.values()
     list_values = list(values)
-    for rating in list_values[1:8]:
+    for rating in list_values[2:9]:
         try:
             summ = summ + Decimal(rating)
         except ValueError:

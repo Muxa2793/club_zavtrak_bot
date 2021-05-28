@@ -31,7 +31,7 @@ def add_cafe_in_list(db, chat_id, cafe_name):
 def find_unrate_cafe(db, chat_id):
     cafe_list = db.cafe.find_one({'chat_id': chat_id, 'rate': False})
     if cafe_list is None:
-        return False
+        return 'Список пуст'
     else:
         return db.cafe.find({'chat_id': chat_id, 'rate': False})
 
@@ -39,7 +39,7 @@ def find_unrate_cafe(db, chat_id):
 def find_rate_cafe(db, chat_id):
     cafe_list = db.cafe.find_one({'chat_id': chat_id, 'rate': True})
     if cafe_list is None:
-        return False
+        return 'Список пуст'
     else:
         return db.cafe.find({'chat_id': chat_id, 'rate': True})
 
@@ -78,3 +78,12 @@ def add_cafe_rate(db, chat_id, cafe_data, summ):
                                      'comment': cafe_data['comment'],
                                      'summ': summ}}}
         )
+
+
+def delete_cafe(db, chat_id, cafe_name):
+    cafe = db.cafe.find_one({'chat_id': chat_id, 'cafe_name': cafe_name.lower()})
+    if cafe:
+        db.cafe.remove({'chat_id': chat_id, 'cafe_name': cafe_name.lower()})
+        return True
+    else:
+        return False
