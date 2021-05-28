@@ -191,7 +191,6 @@ def rate_details(update, context):
                 context.user_data['details'] = rating
                 summ = 0
                 values = context.user_data.values()
-                print(context.user_data)
                 list_values = list(values)
                 for rating in list_values[2:8]:
                     try:

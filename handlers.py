@@ -126,26 +126,28 @@ def rate_or_show_cafe(update, context):
                     results.append(article)
                 update.inline_query.answer(results, cache_time=1)
         elif match_more.group(0) == 'Редактировать:':
-            if context.user_data['cafe_name'] == 'Список пуст':
+            try:
+                if context.user_data['cafe_name'] == 'Список пуст':
+                    pass
+                else:
+                    cafe_name = query[15:]
+                results = [
+                    InlineQueryResultArticle(
+                            id='1', title=cafe_name.capitalize(),
+                            description='Оценить заведение заново',
+                            input_message_content=InputTextMessageContent(
+                                                            message_text=f'Хочу оценить заведение '
+                                                            f'{cafe_name.capitalize()}')),
+                    InlineQueryResultArticle(
+                            id='2', title=cafe_name.capitalize(),
+                            description='Удалить заведение',
+                            input_message_content=InputTextMessageContent(
+                                                            message_text=f'Хочу удалить заведение '
+                                                            f'{cafe_name.capitalize()}'))]
+                update.inline_query.answer(results, cache_time=1)
+            except UnboundLocalError:
                 pass
-            else:
-                print(context.user_data['cafe_name'])
-                cafe_name = query[15:]
-            results = [
-                InlineQueryResultArticle(
-                        id='1', title=cafe_name.capitalize(),
-                        description='Оценить заведение заново',
-                        input_message_content=InputTextMessageContent(
-                                                        message_text=f'Хочу оценить заведение '
-                                                        f'{cafe_name.capitalize()}')),
-                InlineQueryResultArticle(
-                        id='2', title=cafe_name.capitalize(),
-                        description='Удалить заведение',
-                        input_message_content=InputTextMessageContent(
-                                                        message_text=f'Хочу удалить заведение '
-                                                        f'{cafe_name.capitalize()}'))]
-            update.inline_query.answer(results, cache_time=1)
-    except (TypeError):
+    except (TypeError, AttributeError):
         pass
 
 
