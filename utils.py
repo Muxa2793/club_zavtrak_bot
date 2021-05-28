@@ -49,3 +49,7 @@ def edit_keyboard(cafe_name):
         ]
     ]
     return InlineKeyboardMarkup(keyboard)
+
+
+def cancel_button():
+    return ReplyKeyboardMarkup([['Отменить добавление']], resize_keyboard=True)

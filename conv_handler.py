@@ -4,6 +4,7 @@ from rating import (rate_cafe, rate_repeat, rate_taste, rate_supply, rate_servic
 
 from telegram.ext import MessageHandler, Filters, ConversationHandler
 from db import db, add_cafe_in_list
+from utils import cancel_button, main_keyboard
 
 RATE_CAFE = ConversationHandler(
     entry_points=[MessageHandler(Filters.regex('^(Хочу оценить заведение)'), rate_cafe)],
@@ -26,7 +27,7 @@ RATE_CAFE = ConversationHandler(
 
 
 def add_cafe(update, context):
-    update.message.reply_text('Введите название кафе:')
+    update.message.reply_text('Введите название кафе:', reply_markup=cancel_button())
     return 'add_cafe_name'
 
 
@@ -36,12 +37,19 @@ def dont_know(update, context):
 
 def add_cafe_name(update, context):
     cafe_name = update.message.text
-    add_cafe = add_cafe_in_list(db, update.effective_chat.id, cafe_name)
-    if add_cafe is True:
-        update.message.reply_text(f'Заведение <b>{cafe_name}</b> уже есть в списке.', parse_mode='HTML')
+    if cafe_name == 'Отменить добавление':
+        context.bot.delete_message(chat_id=update.effective_chat.id, message_id=update.message.message_id)
+        context.bot.send_message(chat_id=update.effective_chat.id, text='До свидания!', reply_markup=main_keyboard())
+        return ConversationHandler.END
     else:
-        update.message.reply_text(f'Заведение <b>{cafe_name}</b> добавлено в список.', parse_mode='HTML')
-    return ConversationHandler.END
+        add_cafe = add_cafe_in_list(db, update.effective_chat.id, cafe_name)
+        if add_cafe is True:
+            update.message.reply_text(f'Заведение <b>{cafe_name}</b> уже есть в списке.', parse_mode='HTML',
+                                      reply_markup=main_keyboard())
+        else:
+            update.message.reply_text(f'Заведение <b>{cafe_name}</b> добавлено в список.', parse_mode='HTML',
+                                      reply_markup=main_keyboard())
+        return ConversationHandler.END
 
 
 ADD_CAFE = ConversationHandler(
