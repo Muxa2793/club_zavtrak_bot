@@ -82,8 +82,9 @@ def rate_or_show_cafe(update, context):
                     article = InlineQueryResultArticle(
                                 id=str(id_num), title=cafe_name.capitalize(),
                                 description='Посмотреть оценку',
-                                input_message_content=InputTextMessageContent(message_text=f'Хочу узнать оценку '
-                                                                                        f'{cafe_name.capitalize()}'))
+                                input_message_content=InputTextMessageContent(
+                                                        message_text=f'Хочу узнать оценку '
+                                                        f'{cafe_name.capitalize()}'))
                     results.append(article)
                 update.inline_query.answer(results, cache_time=1)
         elif match_more.group(0) == 'Оценить:':
@@ -100,8 +101,9 @@ def rate_or_show_cafe(update, context):
                     article = InlineQueryResultArticle(
                                 id=str(id_num), title=cafe_name.capitalize(),
                                 description='Оценить заведение',
-                                input_message_content=InputTextMessageContent(message_text=f'Хочу оценить заведение '
-                                                                                        f'{cafe_name.capitalize()}'))
+                                input_message_content=InputTextMessageContent(
+                                                        message_text=f'Хочу оценить заведение '
+                                                        f'{cafe_name.capitalize()}'))
                     results.append(article)
                 update.inline_query.answer(results, cache_time=1)
         elif match_more.group(0) == 'Удалить:':
@@ -118,8 +120,9 @@ def rate_or_show_cafe(update, context):
                     article = InlineQueryResultArticle(
                                 id=str(id_num), title=cafe_name.capitalize(),
                                 description='Удалить заведение из списка',
-                                input_message_content=InputTextMessageContent(message_text=f'Хочу удалить заведение '
-                                                                                        f'{cafe_name.capitalize()}'))
+                                input_message_content=InputTextMessageContent(
+                                                        message_text=f'Хочу удалить заведение '
+                                                        f'{cafe_name.capitalize()}'))
                     results.append(article)
                 update.inline_query.answer(results, cache_time=1)
         elif match_more.group(0) == 'Редактировать:':
@@ -132,13 +135,15 @@ def rate_or_show_cafe(update, context):
                 InlineQueryResultArticle(
                         id='1', title=cafe_name.capitalize(),
                         description='Оценить заведение заново',
-                        input_message_content=InputTextMessageContent(message_text=f'Хочу оценить заведение '
-                                                                                   f'{cafe_name.capitalize()}')),
+                        input_message_content=InputTextMessageContent(
+                                                        message_text=f'Хочу оценить заведение '
+                                                        f'{cafe_name.capitalize()}')),
                 InlineQueryResultArticle(
                         id='2', title=cafe_name.capitalize(),
                         description='Удалить заведение',
-                        input_message_content=InputTextMessageContent(message_text=f'Хочу удалить заведение '
-                                                                                   f'{cafe_name.capitalize()}'))]
+                        input_message_content=InputTextMessageContent(
+                                                        message_text=f'Хочу удалить заведение '
+                                                        f'{cafe_name.capitalize()}'))]
             update.inline_query.answer(results, cache_time=1)
     except (TypeError):
         pass
