@@ -178,7 +178,18 @@ def rate_details(update, context):
     cafe_name = context.user_data['cafe_name']
     if update.message.text == 'Пропустить':
         context.user_data['details'] = 'Без оценки'
-        update.message.reply_text(f'Добавьте дополнительный балл для <b>"{cafe_name}"</b> от 0 до 1 по желанию',
+        summ = 0
+        values = context.user_data.values()
+        list_values = list(values)
+        for rate in list_values[2:8]:
+            if rate == 'Без оценки':
+                continue
+            try:
+                summ = summ + Decimal(rate)
+            except ValueError:
+                summ = 'Без оценки'
+        update.message.reply_text(f'Итого: <b>{summ}</b>\nДобавьте дополнительный балл для '
+                                  f'<b>"{cafe_name}"</b> от 0 до 1 по желанию',
                                   parse_mode='HTML')
         return 'add_point'
     elif update.message.text == 'Заново':
@@ -192,9 +203,11 @@ def rate_details(update, context):
                 summ = 0
                 values = context.user_data.values()
                 list_values = list(values)
-                for rating in list_values[2:8]:
+                for rate in list_values[2:8]:
+                    if rate == 'Без оценки':
+                        continue
                     try:
-                        summ = summ + Decimal(rating)
+                        summ = summ + Decimal(rate)
                     except ValueError:
                         summ = 'Без оценки'
                 update.message.reply_text(f'Итого: <b>{summ}</b>\nДобавьте дополнительный балл для '
@@ -259,12 +272,12 @@ def add_comment(update, context):
     values = context.user_data.values()
     list_values = list(values)
     for rating in list_values[2:9]:
+        if rating == 'Без оценки':
+            continue
         try:
             summ = summ + Decimal(rating)
         except ValueError:
             continue
-    if summ == 0:
-        summ = 'Без оценки'
     change_rate_status(db, update.effective_chat.id, cafe_name)
     add_cafe_rate(db, update.effective_chat.id, context.user_data, str(summ))
     update.message.reply_text(f'Название: <b>{cafe_name}</b>\n'
