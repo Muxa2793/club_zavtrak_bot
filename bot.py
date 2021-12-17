@@ -5,10 +5,6 @@ from handlers import greet_user, help_user, show_cafe, rate_or_show_cafe, show_r
 from conv_handler import ADD_CAFE, RATE_CAFE
 from telegram.ext import (Updater, CommandHandler, InlineQueryHandler, Filters, MessageHandler)
 
-PROXY = {'proxy_url': settings.PROXY_URL, 'urllib3_proxy_kwargs': {
-                                'username': settings.PROXY_USERNAME,
-                                'password': settings.PROXY_PASSWORD}}
-
 logging.basicConfig(filename='bot.log', filemode='w', format='%(asctime)s - %(message)s', level=logging.INFO,
                     datefmt='%d-%m-%y %H:%M:%S')
 

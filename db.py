@@ -1,7 +1,11 @@
-from pymongo import MongoClient
+import certifi
+
 import settings
 
-client = MongoClient(settings.MONGO_LINK)
+from pymongo import MongoClient
+
+
+client = MongoClient(settings.MONGO_LINK, tlsCAFile=certifi.where())
 db = client[settings.MONGO_DB]
 
 
