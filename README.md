@@ -11,7 +11,8 @@ club_zavtrak_bot - это бот для Telegram, написанны на язы
 3. Создайте виртуальное окружение
 4. Установите зависимости `pip install -r requirements.txt`
 5. Создайте файл `settings.py`
-7. Впишите в settings.py переменные:
+6. Впишите в settings.py переменные:
+
 ```python
 API_KEY = "API-ключ бота"
 PROXY_URL = "Адрес прокси"
